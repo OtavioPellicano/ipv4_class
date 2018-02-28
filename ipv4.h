@@ -5,7 +5,8 @@
 #include <climits>
 #include <cmath>
 #include <stdexcept>
-
+#include <string>
+#include <vector>
 
 using namespace std;
 namespace opmm {
@@ -14,6 +15,13 @@ class Ipv4
 {
 public:
     Ipv4(const unsigned char& oct_1, const unsigned char& oct_2, const unsigned char& oct_3, const unsigned char& oct_4, const unsigned char &mask = 0) throw(std::domain_error);
+    Ipv4(string &cidr) throw(exception, out_of_range, invalid_argument, domain_error);
+
+    unsigned long ulBroadCast() const;
+    unsigned long ulNetwork() const;
+
+private:
+    void setup(const unsigned char& oct_1, const unsigned char& oct_2, const unsigned char& oct_3, const unsigned char& oct_4, const unsigned char &mask = 0) throw(std::domain_error);
 
 private:
 
@@ -25,10 +33,11 @@ private:
 
     unsigned char mBit;
 
-    const unsigned char desloc_1 = 24;
-    const unsigned char desloc_2 = 16;
-    const unsigned char desloc_3 = 8;
+    const unsigned char mDesloc_1 = 24;
+    const unsigned char mDesloc_2 = 16;
+    const unsigned char mDesloc_3 = 8;
 
+    vector<unsigned int> mVecIpCidr;
 
 
 };

@@ -4,18 +4,83 @@ namespace opmm {
 
 Ipv4::Ipv4(const unsigned char &oct_1, const unsigned char &oct_2, const unsigned char &oct_3, const unsigned char &oct_4, const unsigned char &mask) throw(std::domain_error)
 {
+    try {
+        this->setup(oct_1, oct_2, oct_3, oct_4, mask);
+    } catch (...) {
+        throw;
+    }
 
-    mUlIpv4 = (oct_1<<desloc_1)|(oct_2<<desloc_2)|(oct_3<<desloc_3)|oct_4;
+}
 
-    mBit = mask;
+Ipv4::Ipv4(string &cidr) throw(exception, out_of_range, invalid_argument, domain_error)
+{
+    mVecIpCidr.resize(5);
+    unsigned char pos = 0;
+    unsigned char qntPontos = 0;
+    unsigned char qntBarras = 0;
+    string::iterator itInicio = cidr.begin();
+    for(string::iterator itStr = cidr.begin(); itStr != cidr.end(); ++itStr)
+    {
+        try {
+            if(*itStr == '.')
+            {
+                mVecIpCidr[pos++] = stoul((string(itInicio, itStr)));
+                itInicio = itStr + 1;
+                if(++qntPontos > 3)
+                    throw out_of_range("cidr must be: xxx.xxx.xxx.xxx/xx");
 
-    if(mask != 0)
+            }
+            if(*itStr == '/')
+            {
+                mVecIpCidr[pos++] = stoul(string(itInicio, itStr));
+                itInicio = itStr + 1;
+
+                mVecIpCidr[pos] = stoul(string(itInicio, cidr.end()));
+                if(++qntBarras > 1)
+                    throw out_of_range("cidr must be: xxx.xxx.xxx.xxx/xx");
+            }
+        } catch(invalid_argument)
+        {
+            throw(invalid_argument("cidr must be: xxx.xxx.xxx.xxx/xx"));
+        }
+        catch (exception) {
+            throw;
+        }
+    }
+
+    if((qntPontos == 0 || qntBarras == 0))
+        throw out_of_range("cidr must be: xxx.xxx.xxx.xxx/xx");
+
+    if(mVecIpCidr[0] > 255 || mVecIpCidr[1] > 255 || mVecIpCidr[2] > 255 || mVecIpCidr[3] > 255 || mVecIpCidr[4] > 32)
+        throw domain_error("octet domain_error");
+
+    this->setup(mVecIpCidr[0], mVecIpCidr[1], mVecIpCidr[2], mVecIpCidr[3], mVecIpCidr[4]);
+
+}
+
+unsigned long Ipv4::ulBroadCast() const
+{
+    return mUlBroadCast;
+}
+
+unsigned long Ipv4::ulNetwork() const
+{
+    return mUlNetwork;
+}
+
+void Ipv4::setup(const unsigned char &oct_1, const unsigned char &oct_2, const unsigned char &oct_3, const unsigned char &oct_4, const unsigned char &cidr_bit) throw(std::domain_error)
+{
+    mUlIpv4 = (oct_1<<mDesloc_1)|(oct_2<<mDesloc_2)|(oct_3<<mDesloc_3)|oct_4;
+
+    mBit = cidr_bit;
+
+    if(cidr_bit != 0)
     {
 
-        if(mask >=8 && mask <= 32)
+        if(cidr_bit >=8 && cidr_bit <= 32)
         {
-            mUlNetwork = (ULONG_MAX<<(32-mask))&(mUlIpv4);  //Definindo o limite inferior
-            mUlBroadCast = (~(ULONG_MAX<<(32-mask)))|(mUlIpv4);
+            mUlNetwork = (ULONG_MAX<<(32-cidr_bit))&(mUlIpv4);  //Definindo o limite inferior
+            mUlBroadCast = (~(ULONG_MAX<<(32-cidr_bit)))|(mUlIpv4);
         }
         else
         {
@@ -37,36 +102,33 @@ ostream &operator<<(ostream &out, const Ipv4 &ipv4)
 
     if(ipv4.mBit != 0)
     {
-        oct = ipv4.mUlNetwork;
-        out <<"cidr/bit: " << (oct>>ipv4.desloc_1) << "."
-            << ((oct>>ipv4.desloc_2)&(mask)) << "."
-            << ((oct>>ipv4.desloc_3)&(mask)) << "."
+        oct = ipv4.mUlIpv4;
+        out <<"cidr/bit: " << (oct>>ipv4.mDesloc_1) << "."
+            << ((oct>>ipv4.mDesloc_2)&(mask)) << "."
+            << ((oct>>ipv4.mDesloc_3)&(mask)) << "."
             << ((oct)&(mask)) << "/" << int(ipv4.mBit) << endl;
     }
 
     oct = ipv4.mUlIpv4;
-    out <<"ipv4: " << (oct>>ipv4.desloc_1) << "."
-        << ((oct>>ipv4.desloc_2)&(mask)) << "."
-        << ((oct>>ipv4.desloc_3)&(mask)) << "."
+    out <<"ipv4: " << (oct>>ipv4.mDesloc_1) << "."
+        << ((oct>>ipv4.mDesloc_2)&(mask)) << "."
+        << ((oct>>ipv4.mDesloc_3)&(mask)) << "."
         << ((oct)&(mask)) << endl;
 
     if(ipv4.mBit != 0)
     {
         oct = ipv4.mUlNetwork;
-        out <<"network: " << (oct>>ipv4.desloc_1) << "."
-            << ((oct>>ipv4.desloc_2)&(mask)) << "."
-            << ((oct>>ipv4.desloc_3)&(mask)) << "."
+        out <<"network: " << (oct>>ipv4.mDesloc_1) << "."
+            << ((oct>>ipv4.mDesloc_2)&(mask)) << "."
+            << ((oct>>ipv4.mDesloc_3)&(mask)) << "."
             << ((oct)&(mask)) << endl;
 
         oct = ipv4.mUlBroadCast;
-        out <<"broadcast: " << (oct>>ipv4.desloc_1) << "."
-            << ((oct>>ipv4.desloc_2)&(mask)) << "."
-            << ((oct>>ipv4.desloc_3)&(mask)) << "."
+        out <<"broadcast: " << (oct>>ipv4.mDesloc_1) << "."
+            << ((oct>>ipv4.mDesloc_2)&(mask)) << "."
+            << ((oct>>ipv4.mDesloc_3)&(mask)) << "."
             << ((oct)&(mask)) << endl;
     }
-
-
-
 
     return out;
 }
