@@ -14,14 +14,18 @@ namespace opmm {
 class Ipv4
 {
 public:
+    Ipv4();
     Ipv4(const unsigned char& oct_1, const unsigned char& oct_2, const unsigned char& oct_3, const unsigned char& oct_4, const unsigned char &mask = 0) throw(std::domain_error);
     Ipv4(string &cidr) throw(exception, out_of_range, invalid_argument, domain_error);
+
+    ~Ipv4();
 
     unsigned long ulBroadCast() const;
     unsigned long ulNetwork() const;
 
-private:
     void setup(const unsigned char& oct_1, const unsigned char& oct_2, const unsigned char& oct_3, const unsigned char& oct_4, const unsigned char &mask = 0) throw(std::domain_error);
+
+    void setup(string &cidr) throw(exception, out_of_range, invalid_argument, domain_error);
 
 private:
 
