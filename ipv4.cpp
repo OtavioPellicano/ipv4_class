@@ -27,7 +27,7 @@ Ipv4::Ipv4(string &cidr) throw(exception, out_of_range, invalid_argument, domain
                 mVecIpCidr[pos++] = stoul((string(itInicio, itStr)));
                 itInicio = itStr + 1;
                 if(++qntPontos > 3)
-                    throw out_of_range("cidr must be: xxx.xxx.xxx.xxx/xx");
+                    throw out_of_range("acceptable values: cidr/bit or ipv4");
 
             }
             if(*itStr == '/')
@@ -37,19 +37,30 @@ Ipv4::Ipv4(string &cidr) throw(exception, out_of_range, invalid_argument, domain
 
                 mVecIpCidr[pos] = stoul(string(itInicio, cidr.end()));
                 if(++qntBarras > 1)
-                    throw out_of_range("cidr must be: xxx.xxx.xxx.xxx/xx");
+                    throw out_of_range("acceptable values: cidr/bit or ipv4");
             }
         } catch(invalid_argument)
         {
-            throw(invalid_argument("cidr must be: xxx.xxx.xxx.xxx/xx"));
+            throw invalid_argument("acceptable values: cidr/bit or ipv4");
         }
         catch (exception) {
             throw;
         }
     }
 
-    if((qntPontos == 0 || qntBarras == 0))
-        throw out_of_range("cidr must be: xxx.xxx.xxx.xxx/xx");
+    try {
+        if((qntBarras == 0))
+            mVecIpCidr[pos] = stoul(string(itInicio, cidr.end()));
+    } catch (invalid_argument) {
+        throw invalid_argument("acceptable values: cidr/bit or ipv4");
+    } catch(exception)
+    {
+        throw;
+    }
+
+
+    if((qntPontos == 0))
+        throw out_of_range("acceptable values: cidr/bit or ipv4");
 
     if(mVecIpCidr[0] > 255 || mVecIpCidr[1] > 255 || mVecIpCidr[2] > 255 || mVecIpCidr[3] > 255 || mVecIpCidr[4] > 32)
         throw domain_error("octet domain_error");
